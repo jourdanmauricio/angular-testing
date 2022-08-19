@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
-import { of } from 'rxjs';
+import { mockObservable } from 'src/testing';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ValueService {
-
   private value = 'my value';
 
-  constructor() { }
+  constructor() {}
 
   getValue() {
     // code
@@ -26,6 +25,6 @@ export class ValueService {
   }
 
   getObservableValue() {
-    return of('observable value');
+    return mockObservable('observable value');
   }
 }

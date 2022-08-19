@@ -5,6 +5,7 @@ import { Person } from './../../models/person';
 
 import { PersonComponent } from './person.component';
 import { first } from 'rxjs/operators';
+import { clickEvent, getText, queryById } from 'src/testing';
 
 describe('PersonComponent', () => {
   let component: PersonComponent;
@@ -13,9 +14,8 @@ describe('PersonComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TestHostComponent, PersonComponent ]
-    })
-    .compileComponents();
+      declarations: [TestHostComponent, PersonComponent],
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -31,86 +31,78 @@ describe('PersonComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it("should the name be 'nicolas'", ()=>{
+  it("should the name be 'nicolas'", () => {
     expect(component.person.name).toEqual('Nicolas');
   });
 
   it('should have <h3> with person name', () => {
     const expectMsg = `Hola, ${component.person.name}`;
-    const h3Debug = debugElement.query(By.css('h3'));
-    const h3: HTMLElement = h3Debug.nativeElement;
+    const h3 = getText(fixture, 'h3');
     expect(h3).not.toBeNull();
-    expect(h3?.textContent).toEqual(expectMsg);
+    expect(h3).toEqual(expectMsg);
   });
 
   it('should have <p> with person height', () => {
     const expectMsg = `Mi altura es ${component.person.height}`;
-    const pDebug = debugElement.query(By.css('p'));
-    const p: HTMLElement = pDebug.nativeElement;
+    const p = getText(fixture, 'p');
     expect(p).not.toBeNull();
-    expect(p?.textContent).toEqual(expectMsg);
+    expect(p).toEqual(expectMsg);
   });
 
   it('should display a different height', () => {
     // Arrange
     component.person.height = 999;
     const expectMsg = `Mi altura es ${component.person.height}`;
-    const pDebug = debugElement.query(By.css('p'));
-    const p: HTMLElement = pDebug.nativeElement;
     // Act
     fixture.detectChanges();
+    const p = getText(fixture, 'p');
     // Assert
-    expect(p?.textContent).toEqual(expectMsg);
+    expect(p).toEqual(expectMsg);
   });
 
   it('should have <h3> contain  person name', () => {
     // Arrange
     const expectName = 'Valentina';
     component.person.name = expectName;
-    const h3: HTMLElement = debugElement.query(By.css('h3')).nativeElement;
     // Act
     fixture.detectChanges();
+    const h3 = getText(fixture, 'h3');
     // Assert
-    expect(h3?.textContent).toContain(expectName);
+    expect(h3).toContain(expectName);
   });
 
   it('should display un text with IMC', () => {
     // Arrange
     const expectText = 'overweight';
-    const button = debugElement.query(By.css('.btn-imc')).nativeElement;
     // Act
     component.calcIMC();
     fixture.detectChanges();
+    const button = getText(fixture, 'btn-imc');
     // Assert
-    expect(button.textContent).toContain(expectText);
+    expect(button).toContain(expectText);
   });
 
   it('should display un text with IMC with click', () => {
     // Arrange
     const expectText = 'overweight';
-    const buttonDe = debugElement.query(By.css('.btn-imc'));
-    const buttonEl = buttonDe.nativeElement;
     // Act
-    buttonDe.triggerEventHandler('click', null);
+    clickEvent(fixture, 'btn-imc', true);
     fixture.detectChanges();
     // Assert
-    expect(buttonEl.textContent).toContain(expectText);
+    const txtBtn = getText(fixture, 'btn-imc');
+    expect(txtBtn).toContain(expectText);
   });
 
   it('should raise selected event when clicked', () => {
     // Arrange
     const expectedPerson = new Person('Nicolas', 'Molina', 28, 68, 1.65);
-    const buttonDe = debugElement.query(By.css('.btn-person'));
-
     let selectedPerson: Person | undefined;
-    component.onSelected
-      .pipe(first())
-      .subscribe((person: Person) => {
-        selectedPerson = person;
-      });
+    component.onSelected.pipe(first()).subscribe((person: Person) => {
+      selectedPerson = person;
+    });
     // Act
     component.person = expectedPerson;
-    buttonDe.triggerEventHandler('click', null);
+    clickEvent(fixture, 'btn-person', true);
     fixture.detectChanges();
     // Assert
     expect(selectedPerson).toEqual(expectedPerson);
@@ -118,13 +110,11 @@ describe('PersonComponent', () => {
 });
 
 @Component({
-  template: `
-    <app-person
-      [person]="person" (onSelected)="onSelected($event)">
-    </app-person>`
+  template: ` <app-person [person]="person" (onSelected)="onSelected($event)">
+  </app-person>`,
 })
 class TestHostComponent {
-  person: Person = new Person('Nicolas', 'Molina', 28, 68, 1.65);;
+  person: Person = new Person('Nicolas', 'Molina', 28, 68, 1.65);
   selectedPerson: Person | undefined;
   onSelected(person: Person) {
     this.selectedPerson = person;
@@ -138,9 +128,8 @@ describe('PersonComponent from HostComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TestHostComponent, PersonComponent ]
-    })
-    .compileComponents();
+      declarations: [TestHostComponent, PersonComponent],
+    }).compileComponents();
   });
 
   beforeEach(() => {
@@ -157,14 +146,12 @@ describe('PersonComponent from HostComponent', () => {
 
   it('should display person name', () => {
     const expectedName = component.person.name;
-    const personDe = debugElement.query(By.css('app-person h3'));
-    const personEl = personDe.nativeElement;
-    expect(personEl.textContent).toContain(expectedName);
+    const personDe = getText(fixture, 'h3');
+    expect(personDe).toContain(expectedName);
   });
 
   it('should raise selected event when clicked', () => {
-    const btnDe = debugElement.query(By.css('app-person .btn-person'));
-    btnDe.triggerEventHandler('click', null);
+    clickEvent(fixture, 'btn-person', true);
     fixture.detectChanges();
     expect(component.selectedPerson).toEqual(component.person);
   });

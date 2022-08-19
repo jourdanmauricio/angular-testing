@@ -1,12 +1,24 @@
-import { ComponentFixture, TestBed, tick, fakeAsync } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  tick,
+  fakeAsync,
+} from '@angular/core/testing';
 import { generateManyProducts } from 'src/app/models/product.mock';
 import { ProductsService } from 'src/app/services/product.service';
-import { of, defer } from 'rxjs';
+
+import {
+  asyncData,
+  asyncError,
+  mockObservable,
+  query,
+  queryById,
+  getText,
+} from 'src/testing';
 
 import { ProductsComponent } from './products.component';
 import { ProductComponent } from './../product/product.component';
 import { ValueService } from 'src/app/services/value.service';
-import { By } from '@angular/platform-browser';
 
 describe('ProductsComponent', () => {
   let component: ProductsComponent;
@@ -16,7 +28,9 @@ describe('ProductsComponent', () => {
 
   beforeEach(async () => {
     const spy = jasmine.createSpyObj('ProductsService', ['getAll']);
-    const valueServiceSpy = jasmine.createSpyObj('ValueService', ['getPromiseValue']);
+    const valueServiceSpy = jasmine.createSpyObj('ValueService', [
+      'getPromiseValue',
+    ]);
 
     await TestBed.configureTestingModule({
       declarations: [ProductsComponent, ProductComponent],
@@ -30,10 +44,12 @@ describe('ProductsComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ProductsComponent);
     component = fixture.componentInstance;
-    productService = TestBed.inject(ProductsService) as jasmine.SpyObj<ProductsService>;
+    productService = TestBed.inject(
+      ProductsService
+    ) as jasmine.SpyObj<ProductsService>;
     valueService = TestBed.inject(ValueService) as jasmine.SpyObj<ValueService>;
     const productsMock = generateManyProducts(3);
-    productService.getAll.and.returnValue(of(productsMock));
+    productService.getAll.and.returnValue(mockObservable(productsMock));
     fixture.detectChanges();
   });
 
@@ -46,19 +62,21 @@ describe('ProductsComponent', () => {
       // Arrange
       const productsMock = generateManyProducts(10);
       const lengthPrev = component.products.length;
-      productService.getAll.and.returnValue(of(productsMock));
+      productService.getAll.and.returnValue(mockObservable(productsMock));
       // Act
       component.getAllProducts();
       fixture.detectChanges();
       // Assert
-      expect(component.products.length).toEqual(productsMock.length + lengthPrev);
+      expect(component.products.length).toEqual(
+        productsMock.length + lengthPrev
+      );
       expect(productService.getAll).toHaveBeenCalled();
     });
 
     it('should return change the status "loading" => "success"', fakeAsync(() => {
       // Arrange
       const productsMock = generateManyProducts(10);
-      productService.getAll.and.returnValue(defer(() => Promise.resolve(productsMock)));
+      productService.getAll.and.returnValue(asyncData(productsMock));
 
       component.getAllProducts();
       fixture.detectChanges();
@@ -75,8 +93,7 @@ describe('ProductsComponent', () => {
 
     it('should return change the status "loading" => "error"', fakeAsync(() => {
       // Arrange
-      productService.getAll.and.returnValue(defer(() => Promise.reject('error')));
-
+      productService.getAll.and.returnValue(asyncError('error'));
 
       component.getAllProducts();
       fixture.detectChanges();
@@ -93,7 +110,7 @@ describe('ProductsComponent', () => {
   });
 
   describe('test for callPromise', () => {
-    it('call promise', async() => {
+    it('call promise', async () => {
       // Arrange
       const mockValue = 'my mock string';
       valueService.getPromiseValue.and.returnValue(Promise.resolve(mockValue));
@@ -103,24 +120,22 @@ describe('ProductsComponent', () => {
       // Assert
       expect(component.rta).toEqual(mockValue);
       expect(valueService.getPromiseValue).toHaveBeenCalled();
-    })
+    });
 
     it('should show "my mock string" in <p> when btn was clicked', fakeAsync(() => {
       // Arrange
       const mockMsg = 'my mock string';
       valueService.getPromiseValue.and.returnValue(Promise.resolve(mockMsg));
-      const btnDe = fixture.debugElement.query(By.css('.btn-promise'));
+      const btnDe = queryById(fixture, 'btn-promise');
       // Act
       btnDe.triggerEventHandler('click', null);
       tick();
       fixture.detectChanges();
-      const rtaDe = fixture.debugElement.query(By.css('p.rta'));
+      const textRta = getText(fixture, 'rta');
       // Assert
       expect(component.rta).toEqual(mockMsg);
       expect(valueService.getPromiseValue).toHaveBeenCalled();
-      expect(rtaDe.nativeElement.textContent).toEqual(mockMsg);
+      expect(textRta).toEqual(mockMsg);
     }));
-  })
-
-
+  });
 });
